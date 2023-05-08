@@ -3,11 +3,20 @@ import { Task } from "../models/task.js";
 
 export const newTask = async (req, res, next) => {
   try {
-    const { title, description } = req.body;
+    // const { title, description } = req.body;
+    const { name, address, phone, about } = req.body;
+
+    // await Task.create({
+    //   title,
+    //   description,
+    //   user: req.user,
+    // });
 
     await Task.create({
-      title,
-      description,
+      name,
+      address,
+      phone,
+      about,
       user: req.user,
     });
 
@@ -21,8 +30,12 @@ export const newTask = async (req, res, next) => {
 };
 
 export const getMyTask = async (req, res, next) => {
+  // export const getMyTask = (req, res, next) => {
+  // console.log('req', req.body)
   try {
     const userid = req.user._id;
+
+    console.log('userid', req);
 
     const tasks = await Task.find({ user: userid });
 
@@ -36,13 +49,30 @@ export const getMyTask = async (req, res, next) => {
 };
 
 export const updateTask = async (req, res, next) => {
+
+  const { name, address, phone, about } = req.body;
+  const taskFields = {};
+
+  if (name) taskFields.name = name;
+  if (address) taskFields.address = address;
+  if (phone) taskFields.phone = phone;
+  if (about) taskFields.about = about;
+
   try {
-    const task = await Task.findById(req.params.id);
+    // const task = await Task.findById(req.params.id);
+    let task = await Task.findById(req.params.id)
 
     if (!task) return next(new ErrorHandler("Task not found", 404));
 
-    task.isCompleted = !task.isCompleted;
-    await task.save();
+    task = await Task.findByIdAndUpdate(req.params.id,
+      { $set: taskFields },
+      { new: true }
+    );
+
+    // res.json(task)
+    // // task.updateOne(task['_id'], { $set: eq?.body })
+    // task.isCompleted = !task.isCompleted;
+    // await task.save();
 
     res.status(200).json({
       success: true,
@@ -55,6 +85,7 @@ export const updateTask = async (req, res, next) => {
 
 export const deleteTask = async (req, res, next) => {
   try {
+    console.log('req.params.id', req.params.id)
     const task = await Task.findById(req.params.id);
 
     if (!task) return next(new ErrorHandler("Task not found", 404));
